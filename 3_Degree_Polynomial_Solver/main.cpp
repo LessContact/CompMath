@@ -3,24 +3,24 @@
 #include <fcntl.h>
 #include <cmath>
 
-enum{
-    left,
-    right
+enum : int{
+    left = -1,
+    right = 1
 };
 
-typedef struct root {
-    root() = default;
+struct root {
+    root() {value = 0.0L; multiplicity = 0;}
     root(double value, int multiplicity) : value(value), multiplicity(multiplicity) {}
     double value;
     int multiplicity;
-} root;
+};
 
-typedef struct coeffs {
+struct coeffs {
     double A;
     double B;
     double C;
     double D;
-} coeffs;
+};
 
 inline bool EqualsZero(double value, double epsilon){
     return std::abs(value) < epsilon;
@@ -34,26 +34,92 @@ inline double yDif(double x, coeffs coeffs){
 }
 
 inline void OutputRoot(root root){
-    std::cout << "Root value: " << root.value << std::endl << "Multiplicity: " << root.multiplicity << std::endl;
+    std::wcout << L"Root value: " << root.value << std::endl << L"Multiplicity: " << root.multiplicity << std::endl;
 }
 
-root SolveClosedInterval(double pointLeft, double pointRight){
-    //todo: implement
-}
+class Solver {
+public:
+    double epsilon;
+    double delta;
+    coeffs coeffs;
+
+    Solver() = default;
+    Solver(double epsilon, double delta, struct coeffs coeffs) : epsilon(epsilon), delta(delta), coeffs(coeffs) {}
+
+    root SolveClosedInterval(double pointLeft, double pointRight) {
+        if(EqualsZero(std::abs(pointRight - pointLeft))) return {pointLeft, 1};
+
+        double center = (pointLeft + pointRight) / 2.0L;
+        double functionAtCenter = y(center, coeffs);
+        if(EqualsZero(functionAtCenter)) return {center, 1};
+
+        double functionAtLeft = y(pointLeft, coeffs);
+        if(functionAtLeft < 0.0L) {
+            if (functionAtCenter > 0.0L) return SolveClosedInterval(pointLeft, center);
+            else if (functionAtCenter < 0.0L) return SolveClosedInterval(center, pointRight);
+        }
+        else {
+            if (functionAtCenter > 0.0L) return SolveClosedInterval(center, pointRight);
+            else if (functionAtCenter < 0.0L) return SolveClosedInterval(pointLeft, center);
+        }
+
+        return {};
+    }
 
 //direction is the infinity direction
-root SolveOpenInterval(double point, int direction){
-    //todo: implement
-}
+    root SolveOpenInterval(double point, int direction) {
+        if(direction == right) {
+            return SolveRightInterval(point);
+        }
+        if(direction == left){
+            return SolveLeftInterval(point);
+        }
+        return {};
+    }
+
+    [[nodiscard]] inline bool EqualsZero(double value) const{
+        return std::abs(value) < epsilon;
+    }
+
+private:
+    root SolveRightInterval(double point){
+        double newPointVal = y(point + delta, coeffs);
+        if (newPointVal > 0.0L){
+            return SolveClosedInterval(point, point + delta);
+        }
+        else {
+            return SolveRightInterval(point + delta);
+        }
+    }
+    root SolveLeftInterval(double point){
+        double newPointVal = y(point - delta, coeffs);
+        if (newPointVal < 0.0L){
+            return SolveClosedInterval(point - delta, point);
+        }
+        else {
+            return SolveLeftInterval(point - delta);
+        }
+    }
+};
+
+/* variables
+ * 1 -2 -1 2 (-1 1 2)
+ * 2 -2 -1 2 (-0.8755)
+ * 1 1 1 -3 (1)
+ * 6 0 0 1 (-0.55)
+ * 5 3 -1.8 0.2 (-1 0.2)
+ * */
 
 int main() {
     _setmode(STDOUT_FILENO, _O_U8TEXT);
 
     double epsilon, delta;
+//    Solver Solver = Solver;
+
     coeffs coeffs;
     std::wstring temp;
 
-    std::wcout << L"Enter your polynomial coefficients for the form Ax³+Bx²+Cx+D. Type \"d\" for default(1,-2,-1,2)" << std::endl << "A = " << std::endl;
+    std::wcout << L"Hi! ヾ(•ω•`)o\nEnter your polynomial coefficients for the form Ax³+Bx²+Cx+D. Type \"d\" for default(1,-2,-1,2)" << std::endl << "A = " << std::endl;
     std::wcin >> temp;
     if(temp == L"d"){
         coeffs.A = 1.0l;
@@ -87,6 +153,8 @@ int main() {
         std::wcin >> delta;
     }
 
+    Solver Solver(epsilon, delta, coeffs);
+
     // ------------------- proper stuff -------------------
 
     struct coeffs diffedCoeffs;
@@ -94,6 +162,7 @@ int main() {
         diffedCoeffs.A = coeffs.A * 3.0l;
         diffedCoeffs.B = coeffs.B * 2.0L;
         diffedCoeffs.C = coeffs.C;
+        diffedCoeffs.D = 0.0L;
     }
 
     double discriminant = diffedCoeffs.B * diffedCoeffs.B - 4 * diffedCoeffs.A * diffedCoeffs.C;
@@ -103,22 +172,22 @@ int main() {
     if(difRoot1.value > difRoot2.value) std::swap(difRoot1, difRoot2); // sort roots)))
 
     // CASE IV
-    if(EqualsZero(discriminant, epsilon)){ //todo: god knows if this will work
+    if(Solver.EqualsZero(discriminant)){
         //third case
-        if(EqualsZero(y(difRoot1.value, coeffs), epsilon)){
+        if(Solver.EqualsZero(y(difRoot1.value, coeffs))){
             difRoot1.multiplicity = 3;
             OutputRoot(difRoot1);
             return 0;
         }
         //first case
-        else if(y(difRoot1.value, coeffs) > epsilon) {
-            root root = SolveOpenInterval(difRoot1.value, left);
+        else if(y(difRoot1.value, coeffs) > Solver.epsilon) {
+            root root = Solver.SolveOpenInterval(difRoot1.value, left);
             OutputRoot(root);
             return 0;
         }
         //second case
         else {
-            root root = SolveOpenInterval(difRoot1.value, right);
+            root root = Solver.SolveOpenInterval(difRoot1.value, right);
             OutputRoot(root);
             return 0;
         }
@@ -133,12 +202,12 @@ int main() {
             return 0;
         }
         else if(temp < 0.0l){
-            root root = SolveOpenInterval(0.0l, right);
+            root root = Solver.SolveOpenInterval(0.0l, right);
             OutputRoot(root);
             return 0;
         }
         else {
-            root root = SolveOpenInterval(0.0l, left);
+            root root = Solver.SolveOpenInterval(0.0l, left);
             OutputRoot(root);
             return 0;
         }
@@ -147,10 +216,10 @@ int main() {
     //CASE II
 
     //II.3
-    if(y(difRoot1.value, coeffs) > epsilon && y(difRoot2.value,coeffs) < -epsilon){
-        root root1 = SolveOpenInterval(difRoot1.value, left);
-        root root2 = SolveClosedInterval(difRoot1.value, difRoot2.value);
-        root root3 = SolveOpenInterval(difRoot2.value, right);
+    if(y(difRoot1.value, coeffs) > Solver.epsilon && y(difRoot2.value,coeffs) < -Solver.epsilon){
+        root root1 = Solver.SolveOpenInterval(difRoot1.value, left);
+        root root2 = Solver.SolveClosedInterval(difRoot1.value, difRoot2.value);
+        root root3 = Solver.SolveOpenInterval(difRoot2.value, right);
         OutputRoot(root1);
         OutputRoot(root2);
         OutputRoot(root3);
@@ -158,12 +227,12 @@ int main() {
     }
     //II.1
     else if(y(difRoot2.value, coeffs) > 0){
-        root root = SolveOpenInterval(difRoot1.value, left);
+        root root = Solver.SolveOpenInterval(difRoot1.value, left);
         OutputRoot(root);
         return 0;
     }//II.2
     else if(y(difRoot1.value, coeffs) < 0){
-        root root = SolveOpenInterval(difRoot2.value, right);
+        root root = Solver.SolveOpenInterval(difRoot2.value, right);
         OutputRoot(root);
         return 0;
     }
@@ -171,17 +240,17 @@ int main() {
     //CASE III
 
     //III.1
-    if(EqualsZero(y(difRoot2.value, coeffs), epsilon) && y(difRoot1.value, coeffs) > epsilon){
+    if(EqualsZero(y(difRoot2.value, coeffs), Solver.epsilon) && y(difRoot1.value, coeffs) > Solver.epsilon){
         difRoot2.multiplicity = 2;
-        root root = SolveOpenInterval(difRoot2.value, right);
+        root root = Solver.SolveOpenInterval(difRoot2.value, right);
         OutputRoot(root);
         OutputRoot(difRoot2);
         return 0;
     }
     //III.2
-    else if(EqualsZero(y(difRoot1.value, coeffs), epsilon) && y(difRoot2.value, coeffs) < -epsilon){
+    else if(EqualsZero(y(difRoot1.value, coeffs), Solver.epsilon) && y(difRoot2.value, coeffs) < -Solver.epsilon){
         difRoot1.multiplicity = 2;
-        root root = SolveOpenInterval(difRoot2.value, right);
+        root root = Solver.SolveOpenInterval(difRoot2.value, right);
         OutputRoot(difRoot1);
         OutputRoot(root);
         return 0;
