@@ -2,6 +2,11 @@
 #include <io.h>
 #include <fcntl.h>
 #include <cmath>
+#include <random>
+#include <iomanip>
+
+std::random_device rd;
+std::mt19937 gen(rd());
 
 enum : int{
     left = -1,
@@ -87,18 +92,20 @@ private:
         if (newPointVal > 0.0L){
             return SolveClosedInterval(point, point + delta);
         }
-        else {
+        else if(newPointVal < 0.0L){
             return SolveRightInterval(point + delta);
         }
+        else return {point + delta, 1};
     }
     root SolveLeftInterval(double point){
         double newPointVal = y(point - delta, coeffs);
         if (newPointVal < 0.0L){
             return SolveClosedInterval(point - delta, point);
         }
-        else {
+        else if (newPointVal > 0.0L){
             return SolveLeftInterval(point - delta);
         }
+        else return {point - delta, 1};
     }
 };
 
@@ -119,13 +126,22 @@ int main() {
     coeffs coeffs;
     std::wstring temp;
 
-    std::wcout << L"Hi! ヾ(•ω•`)o\nEnter your polynomial coefficients for the form Ax³+Bx²+Cx+D. Type \"d\" for default(1,-2,-1,2)" << std::endl << "A = " << std::endl;
+    std::wcout << L"Hi! (p≧w≦q)\nEnter your polynomial coefficients for the form Ax³+Bx²+Cx+D.\nType \"r\" for random.\nType \"d\" for default(1,-2,-1,2)" << std::endl << "A = " << std::endl;
     std::wcin >> temp;
     if(temp == L"d"){
         coeffs.A = 1.0l;
         coeffs.B = -2.0L;
         coeffs.C = -1.0L;
         coeffs.D = 2.0L;
+    }
+    else if(temp == L"r"){
+//        std::uniform_real_distribution<double> dis(std::numeric_limits<double>::min(), std::numeric_limits<double>::max());
+        std::uniform_real_distribution<double> dis(100000000000000.0L, -10000000000000.0L);
+        coeffs.A = dis(gen);
+        coeffs.B = dis(gen);
+        coeffs.C = dis(gen);
+        coeffs.D = dis(gen);
+        std::wcout << L"Generated equation: " << coeffs.A << L"•x³+" << coeffs.B << L"•x²+" << coeffs.C << L"•x+" << coeffs.D << L" = 0." << std::endl;
     }
     else {
         coeffs.A = std::stod(temp);
@@ -136,10 +152,6 @@ int main() {
         std::wcout << "D = " << std::endl;
         std::wcin >> coeffs.D;
     }
-    coeffs.A = coeffs.A / coeffs.A;
-    coeffs.B = coeffs.B / coeffs.A;
-    coeffs.C = coeffs.C / coeffs.A;
-    coeffs.D = coeffs.D / coeffs.A;
 
     std::wcout << L"Set desirable precision. Type \"d\" for default (ε=1e-8, Δ=1)" << std::endl << L"ε:" << std::endl;
     std::wcin >> temp;
@@ -152,6 +164,12 @@ int main() {
         std::wcout << "Approach step size." << std::endl << L"Δ:" << std::endl;
         std::wcin >> delta;
     }
+    std::wcout << std::setprecision(static_cast<int>(std::round(std::log10(epsilon))));
+
+    coeffs.B = coeffs.B / coeffs.A;
+    coeffs.C = coeffs.C / coeffs.A;
+    coeffs.D = coeffs.D / coeffs.A;
+    coeffs.A = coeffs.A / coeffs.A;
 
     Solver Solver(epsilon, delta, coeffs);
 

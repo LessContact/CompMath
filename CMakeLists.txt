@@ -7,4 +7,4 @@ add_executable(3Polynomial 3_Degree_Polynomial_Solver/main.cpp)
 target_compile_options(3Polynomial PRIVATE -O2)
 
 add_executable(3Polynomial_debug 3_Degree_Polynomial_Solver/main.cpp)
-target_compile_options(3Polynomial_debug PRIVATE -Og)
+target_compile_options(3Polynomial_debug PRIVATE -O0)
