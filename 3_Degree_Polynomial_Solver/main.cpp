@@ -39,7 +39,7 @@ inline double yDif(double x, coeffs coeffs){
 }
 
 inline void OutputRoot(root root){
-    std::wcout << L"Root value: " << root.value << std::endl << L"Multiplicity: " << root.multiplicity << std::endl;
+    std::wcout << L"Значение корня: " << root.value << std::endl << L"Кратность корня: " << root.multiplicity << std::endl;
 }
 
 class Solver {
@@ -126,7 +126,7 @@ int main() {
     coeffs coeffs;
     std::wstring temp;
 
-    std::wcout << L"Hi! (p≧w≦q)\nEnter your polynomial coefficients for the form Ax³+Bx²+Cx+D.\nType \"r\" for random.\nType \"d\" for default(1,-2,-1,2)" << std::endl << "A = " << std::endl;
+    std::wcout << L"Hi! (p≧w≦q)\nВведите коэффициенты многочлена в форме Ax³+Bx²+Cx+D.\nВведите \"r\" для случайных коэффициентов.\nВведите \"d\" для значений по умолчанию(1,-2,-1,2)" << std::endl << "A = " << std::endl;
     std::wcin >> temp;
     if(temp == L"d"){
         coeffs.A = 1.0l;
@@ -141,7 +141,7 @@ int main() {
         coeffs.B = dis(gen);
         coeffs.C = dis(gen);
         coeffs.D = dis(gen);
-        std::wcout << L"Generated equation: " << coeffs.A << L"•x³+" << coeffs.B << L"•x²+" << coeffs.C << L"•x+" << coeffs.D << L" = 0." << std::endl;
+        std::wcout << L"Созданное уравнение: " << coeffs.A << L"•x³+" << coeffs.B << L"•x²+" << coeffs.C << L"•x+" << coeffs.D << L" = 0." << std::endl;
     }
     else {
         coeffs.A = std::stod(temp);
@@ -153,7 +153,7 @@ int main() {
         std::wcin >> coeffs.D;
     }
 
-    std::wcout << L"Set desirable precision. Type \"d\" for default (ε=1e-8, Δ=1)" << std::endl << L"ε:" << std::endl;
+    std::wcout << L"Введите нужную точность. Введите \"d\" для значений по умолчанию (ε=1e-8, Δ=1)" << std::endl << L"ε:" << std::endl;
     std::wcin >> temp;
     if(temp == L"d"){
         epsilon = 0.00000001L;
@@ -161,7 +161,7 @@ int main() {
     }
     else {
         epsilon = std::stod(temp);
-        std::wcout << "Approach step size." << std::endl << L"Δ:" << std::endl;
+        std::wcout << "Размер шага." << std::endl << L"Δ:" << std::endl;
         std::wcin >> delta;
     }
     std::wcout << std::setprecision(static_cast<int>(std::round(std::log10(epsilon))));
