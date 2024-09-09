@@ -115,6 +115,7 @@ private:
  * 1 1 1 -3 (1)
  * 6 0 0 1 (-0.55)
  * 5 3 -1.8 0.2 (-1 0.2)
+ * 1 0 0 0 (0 0 0)
  * */
 
 int main() {
@@ -123,7 +124,7 @@ int main() {
     double epsilon, delta;
 //    Solver Solver = Solver;
 
-    coeffs coeffs;
+    coeffs coeffs{};
     std::wstring temp;
 
     std::wcout << L"Hi! (p≧w≦q)\nВведите коэффициенты многочлена в форме Ax³+Bx²+Cx+D.\nВведите \"r\" для случайных коэффициентов.\nВведите \"d\" для значений по умолчанию(1,-2,-1,2)" << std::endl << "A = " << std::endl;
